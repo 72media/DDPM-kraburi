@@ -373,7 +373,7 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 <script>
 /* ================================================================
-   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (UI/UX + Dark Tooltip)
+   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (UI/UX + Agency Full Names)
    ================================================================ */
 'use strict';
 
@@ -393,6 +393,22 @@ const GPX_URL     = 'https://raw.githubusercontent.com/72media/my-file/refs/head
 
 const camSrc = (code, idx) => 'https://cctv.disaster.go.th/api/webrtc/public-frame.jpeg?src=' + code + '-0' + (idx + 1);
 const camFind = code => CAMERAS.find(c => c.code === code);
+
+/* ---------- แมปชื่อหน่วยงาน ---------- */
+function getAgencyFullName(agency) {
+  const agencyMap = {
+    'DWR': 'กรมทรัพยากรน้ำ',
+    'HII': 'สถาบันสารสนเทศทรัพยากรน้ำและการเกษตร',
+    'RID': 'กรมชลประทาน',
+    'EGAT': 'การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย',
+    'TMD': 'กรมอุตุนิยมวิทยา',
+    'DISASTER': 'กรมป้องกันและบรรเทาสาธารณภัย (ปภ.)',
+    'BMA': 'กรุงเทพมหานคร',
+    'ThaiWater': 'ระบบคลังข้อมูลน้ำแห่งชาติ',
+    'FOP': 'หน่วยงานภาคสนาม/อุทยานฯ'
+  };
+  return agencyMap[agency] ? `${agency} (${agencyMap[agency]})` : agency;
+}
 
 let Leaflet = null;      
 let map = null;
@@ -582,7 +598,7 @@ function updateSidebar(){
   });
 }
 
-/* ---------- Sidebar (สถานีฝน) - PRO UI ---------- */
+/* ---------- Sidebar (สถานีฝน) - PRO UI + Full Agency Name ---------- */
 function buildRainSidebar(stations) {
   globalRainData = stations;
   const el = $('rainListContainer');
@@ -599,13 +615,15 @@ function buildRainSidebar(stations) {
     else if (stn.rain24h > 0) intensity = 'light';
     
     if (stn.rain24h > 0) textVal = stn.rain24h;
+    
+    // ใช้ฟังก์ชัน getAgencyFullName เพื่อแสดงชื่อเต็ม
+    const agencyFull = getAgencyFullName(stn.agency);
 
-    // สร้างการ์ดแบบใหม่
     return `<div class="rain-item ${intensity}" data-idx="${idx}">
       <div class="rain-icon-box">🌧️</div>
       <div class="rain-info">
         <div class="rain-name">${stn.name}</div>
-        <div class="rain-agency">${stn.agency}</div>
+        <div class="rain-agency">${agencyFull}</div>
       </div>
       <div class="rain-badge ${intensity}">
         ${textVal} มม.
@@ -613,7 +631,6 @@ function buildRainSidebar(stations) {
     </div>`;
   }).join('');
 
-  // คลิกที่ชื่อสถานีใน Sidebar -> ซูมแผนที่ไปที่จุดนั้น
   el.querySelectorAll('.rain-item').forEach(item => {
     item.addEventListener('click', () => {
       const idx = parseInt(item.dataset.idx, 10);
@@ -753,10 +770,12 @@ async function toggleRainStations() {
           icon: getRainIcon(stn.rain24h)
         }).addTo(map);
         
+        // ใช้ชื่อเต็มของหน่วยงานใน Popup ด้วย
+        const agencyFull = getAgencyFullName(stn.agency);
         marker.bindTooltip(stn.name, { direction: 'top', offset: [0, -30] });
         marker.bindPopup(
           `<b>${stn.name}</b>` +
-          `หน่วยงาน: ${stn.agency}<br>` +
+          `หน่วยงาน: ${agencyFull}<br>` +
           `ฝน 24 ชม: <b style="color:#34d399">${stn.rain24h} มม.</b><br>` +
           `<small style="color:#94a3b8">${stn.location}</small>`
         );
@@ -1022,7 +1041,7 @@ async function init(){
   
   initRainSidebar(); 
 
-  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + Sidebar 2 หมวด (Dark UI)');
+  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + Sidebar 2 หมวด (Full Agency Names)');
 }
 updateThaiTime();
 setInterval(updateThaiTime, 1000);
