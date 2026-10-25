@@ -36,20 +36,26 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 /* ===== sidebar ===== */
 .cctv-sidebar{position:absolute;top:96px;left:16px;z-index:5000;background:rgba(8,14,22,.95);backdrop-filter:blur(16px);border-radius:24px;border:1px solid rgba(64,224,208,.35);box-shadow:0 15px 35px rgba(0,0,0,.5);width:306px;max-height:calc(100vh - 160px);display:flex;flex-direction:column;overflow:hidden}
-.sidebar-header{padding:14px 16px 11px;border-bottom:1px solid rgba(100,220,200,.3)}
-.sidebar-header h3{font-size:1.02rem;font-weight:800;background:linear-gradient(135deg,#c0f0ff,#a0ffcc);-webkit-background-clip:text;color:transparent}
-.camera-list-container{overflow-y:auto;padding:8px 6px 14px;flex:1}
-.camera-item{background:rgba(20,30,38,.78);margin:7px;padding:11px 13px;border-radius:18px;cursor:pointer;transition:.25s;display:flex;align-items:center;gap:10px;border-left:4px solid transparent}
-.camera-item:hover{background:rgba(40,70,75,.9);transform:translateX(6px)}
-.camera-item .cam-sub{font-size:.68rem;color:#aacfd9;font-family:monospace}
-.camera-item .cam-ico{font-size:24px}
+.sidebar-header{padding:14px 16px 11px;border-bottom:1px solid rgba(100,220,200,.3);flex-shrink:0}
+.sidebar-header h3{font-size:1.02rem;font-weight:800;background:linear-gradient(135deg,#c0f0ff,#a0ffcc);-webkit-background-clip:text;color:transparent;line-height:1.3}
+.sidebar-scroll{overflow-y:auto;flex:1;display:flex;flex-direction:column}
+.sidebar-sub-header{padding:12px 16px 6px;font-weight:800;color:#8effe0;font-size:0.9rem;border-top:1px solid rgba(100,220,200,.3);margin-top:6px;background:rgba(0,0,0,0.2)}
+.camera-list-container{padding:8px 6px 14px}
+.camera-item,.rain-item{background:rgba(20,30,38,.78);margin:7px;padding:11px 13px;border-radius:18px;cursor:pointer;transition:.25s;display:flex;align-items:center;gap:10px;border-left:4px solid transparent}
+.camera-item:hover,.rain-item:hover{background:rgba(40,70,75,.9);transform:translateX(6px)}
+.cam-sub,.rain-sub{font-size:.68rem;color:#aacfd9;font-family:monospace}
+.cam-ico,.rain-ico{font-size:24px}
 
 /* ===== chips ===== */
-.side-chip{font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap}
+.side-chip,.side-rain-chip{font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap}
 .side-chip.ok{background:#2fd48a;color:#06251a}
 .side-chip.warn{background:#ffb648;color:#3a2400}
 .side-chip.danger{background:#ff4d4d;color:#fff;animation:blink 1s infinite}
 .side-chip.gray{background:#3a4750;color:#c9d6dd}
+.side-rain-chip.light{background:#2fd48a;color:#06251a}
+.side-rain-chip.moderate{background:#ffb648;color:#3a2400}
+.side-rain-chip.heavy{background:#ff4d4d;color:#fff;animation:blink 1s infinite}
+.side-rain-chip.none{background:#3a4750;color:#c9d6dd}
 
 /* ===== map markers (Water) ===== */
 .cam-pin{background:transparent;border:none}
@@ -167,8 +173,15 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 <!-- sidebar -->
 <div class="cctv-sidebar">
-  <div class="sidebar-header"><h3>🎦 กล้อง + ระดับน้ำ — อ.กระบุรี</h3></div>
-  <div id="cameraListContainer" class="camera-list-container"></div>
+  <div class="sidebar-header">
+    <h3>🎦 กล้อง + ระดับน้ำ + สถานีฝน — อ.กระบุรี</h3>
+  </div>
+  <div class="sidebar-scroll">
+    <div id="cameraListContainer" class="camera-list-container"></div>
+    
+    <div class="sidebar-sub-header">🌧️ สถานีวัดฝน (ONWR)</div>
+    <div id="rainListContainer" class="camera-list-container"></div>
+  </div>
 </div>
 
 <div id="map"></div>
@@ -237,7 +250,7 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 <script>
 /* ================================================================
-   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (กล้อง + น้ำ + ฝน)
+   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (กล้อง + น้ำ + ฝน + Sidebar 2 หมวด)
    ================================================================ */
 'use strict';
 
@@ -273,6 +286,7 @@ const weatherCache = {};
 // สถานีวัดฝน
 let rainMarkers = [];
 let rainOn = false;
+let globalRainData = []; // เก็บข้อมูลสถานีฝนทั้งหมดไว้ใช้ใน Sidebar
 
 const $ = id => document.getElementById(id);
 const fmtTime = d => d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
@@ -422,6 +436,7 @@ function initMap(){
   });
 }
 
+/* ---------- Sidebar (กล้อง+น้ำ) ---------- */
 function buildSidebar(){
   const el = $('cameraListContainer');
   el.innerHTML = CAMERAS.map(c =>
@@ -444,6 +459,70 @@ function updateSidebar(){
   });
 }
 
+/* ---------- Sidebar (สถานีฝน) ---------- */
+function buildRainSidebar(stations) {
+  globalRainData = stations;
+  const el = $('rainListContainer');
+  if (!stations || stations.length === 0) {
+    el.innerHTML = '<div style="padding:10px;text-align:center;font-size:0.8rem;color:#888;">ไม่มีข้อมูลสถานีฝน</div>';
+    return;
+  }
+
+  el.innerHTML = stations.map((stn, idx) => {
+    let chipCls = 'side-rain-chip';
+    let text = '🌧️ ' + stn.rain24h + ' มม.';
+    if (stn.rain24h >= 20) chipCls += ' heavy';
+    else if (stn.rain24h >= 5) chipCls += ' moderate';
+    else if (stn.rain24h > 0) chipCls += ' light';
+    else {
+      chipCls += ' none';
+      text = '☁️ 0 มม.';
+    }
+
+    return `<div class="rain-item" data-idx="${idx}">
+      <span class="rain-ico">🌧️</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.85rem;">${stn.name}</div>
+        <div class="rain-sub">${stn.agency}</div>
+      </div>
+      <span class="${chipCls}">${text}</span>
+    </div>`;
+  }).join('');
+
+  // คลิกที่ชื่อสถานีใน Sidebar -> ซูมแผนที่ไปที่จุดนั้น
+  el.querySelectorAll('.rain-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.idx, 10);
+      const stn = stations[idx];
+      if (stn && stn.lat && stn.lon) {
+        map.setView([stn.lat, stn.lon], 14);
+        // ถ้าเลเยอร์ฝนยังไม่เปิด ให้เปิดขึ้นมา
+        if (!rainOn) toggleRainStations();
+        // หา Marker แล้วเปิด Popup (อาจจะต้องรอให้โหลด Marker เสร็จก่อน)
+        setTimeout(() => {
+          const marker = rainMarkers.find(m => m.getLatLng().lat === stn.lat && m.getLatLng().lng === stn.lon);
+          if (marker) marker.openPopup();
+        }, 500);
+      }
+    });
+  });
+}
+
+async function initRainSidebar() {
+  try {
+    const res = await fetch('./rain_stations.json?t=' + Date.now());
+    if (res.ok) {
+      const stations = await res.json();
+      buildRainSidebar(stations);
+    } else {
+      $('rainListContainer').innerHTML = '<div style="padding:10px;text-align:center;font-size:0.8rem;color:#888;">รอการอัปเดตข้อมูล</div>';
+    }
+  } catch (e) {
+    $('rainListContainer').innerHTML = '<div style="padding:10px;text-align:center;font-size:0.8rem;color:#888;">ไม่พบข้อมูลสถานีฝน</div>';
+  }
+}
+
+/* ---------- GPX คลองน้ำจืด ---------- */
 function showGpxError(msg){
   const st = $('gpxStatus');
   st.textContent = msg; st.classList.add('show');
@@ -508,7 +587,7 @@ function toggleGPX(){
     });
 }
 
-/* ---------- สถานีวัดฝน ---------- */
+/* ---------- สถานีวัดฝน (Map Layer) ---------- */
 function getRainIcon(rainfall) {
   let chipClass = 'rain-chip';
   let text = '🌧️ ' + rainfall + ' มม.';
@@ -538,16 +617,22 @@ async function toggleRainStations() {
 
   $('rainToggleBtn').textContent = '🌧️ กำลังโหลด...';
   try {
-    const res = await fetch('./rain_stations.json?t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' (ไฟล์อาจจะยังไม่ถูกสร้าง)');
-    const stations = await res.json();
+    // ถ้ามีข้อมูลใน globalRainData แล้วให้ใช้เลย หรือ fetch ใหม่
+    let stations = globalRainData;
+    if (!stations || stations.length === 0) {
+      const res = await fetch('./rain_stations.json?t=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      stations = await res.json();
+      buildRainSidebar(stations);
+    }
 
     stations.forEach(stn => {
-      if (stn.lat && stn.lon) {
+      if (stn.lat && stn.lon && !isNaN(stn.lat) && !isNaN(stn.lon)) {
         const marker = Leaflet.marker([stn.lat, stn.lon], {
           icon: getRainIcon(stn.rain24h)
         }).addTo(map);
         
+        marker.bindTooltip(stn.name, { direction: 'top', offset: [0, -30] });
         marker.bindPopup(
           `<b>${stn.name}</b><br>` +
           `หน่วยงาน: ${stn.agency}<br>` +
@@ -651,6 +736,7 @@ async function fillModalWeather(cam){
   }catch(e){ el.innerHTML = '⚠️ ไม่สามารถโหลดข้อมูลอากาศ (แต่วิดีโอยังทำงานปกติ)'; }
 }
 
+/* ---------- Grid 2x5 ---------- */
 function openGrid(){
   if (gridOpen) return;
   closeModal();
@@ -712,6 +798,7 @@ function stopGridFeeds(){
   gridTimers = {};
 }
 
+/* ---------- เรดาร์ ---------- */
 function setRadarVisible(on){
   radarOn = on;
   if (!map) return;
@@ -746,6 +833,7 @@ function toggleRadarBar(){
   if (radarBarOn && !radarOn) setRadarVisible(true);
 }
 
+/* ---------- setup UI ---------- */
 function setupUI(){
   $('gridBtn').addEventListener('click', () => gridOpen ? closeGrid() : openGrid());
   $('gpxBtn').addEventListener('click', toggleGPX);
@@ -796,6 +884,7 @@ function setupUI(){
   });
 }
 
+/* ---------- init ---------- */
 async function init(){
   try{
     Leaflet = await ensureLeaflet();   
@@ -806,9 +895,13 @@ async function init(){
   initMap();
   buildSidebar();
   setupUI();
+  
   refreshLevels();                                   
   setInterval(refreshLevels, 60*1000);               
-  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + เรดาร์');
+  
+  initRainSidebar(); // โหลดข้อมูลสถานีฝนลง Sidebar ทันที
+
+  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + Sidebar 2 หมวด');
 }
 updateThaiTime();
 setInterval(updateThaiTime, 1000);
@@ -854,7 +947,7 @@ window.addEventListener('DOMContentLoaded', init);
   if (!expand) {
     expand = document.createElement('button');
     expand.id = 'sbExpandBtn'; expand.type = 'button';
-    expand.title = 'แสดงแถบรายชื่อกล้อง'; expand.innerHTML = '🎥';
+    expand.title = 'แสดงแถบรายชื่อ'; expand.innerHTML = '🎥';
     document.body.appendChild(expand);
   }
 
