@@ -145,6 +145,61 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 .rain-chip.heavy{background:#ff4d4d;color:#fff;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.35}}
 
+/* =========================================
+   🌟 เพิ่มใหม่: ปรับแต่ง Leaflet Tooltip & Popup ให้เป็น Dark Mode
+   ========================================= */
+/* Tooltip (ตอนเอาเมาส์ไปชี้) */
+.leaflet-tooltip {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(100, 220, 200, 0.5) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6) !important;
+  border-radius: 8px !important;
+  font-family: 'Prompt', sans-serif;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+/* ลูกศรชี้ของ Tooltip */
+.leaflet-tooltip-top:before { border-top-color: rgba(15, 23, 42, 0.95) !important; }
+.leaflet-tooltip-bottom:before { border-bottom-color: rgba(15, 23, 42, 0.95) !important; }
+.leaflet-tooltip-left:before { border-left-color: rgba(15, 23, 42, 0.95) !important; }
+.leaflet-tooltip-right:before { border-right-color: rgba(15, 23, 42, 0.95) !important; }
+
+/* Popup (ตอนคลิก) */
+.leaflet-popup-content-wrapper {
+  background-color: rgba(15, 23, 42, 0.98) !important;
+  color: #f8fafc !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(100, 220, 200, 0.4) !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.7) !important;
+}
+.leaflet-popup-tip {
+  background-color: rgba(15, 23, 42, 0.98) !important;
+  border: 1px solid rgba(100, 220, 200, 0.4) !important;
+}
+.leaflet-popup-content {
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.9rem;
+  margin: 14px 18px;
+  line-height: 1.6;
+}
+.leaflet-popup-content b {
+  color: #aef3ff; /* ไฮไลท์ชื่อสถานี */
+  font-size: 1.05rem;
+  display: block;
+  margin-bottom: 4px;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+  padding: 10px 10px 0 0 !important;
+  transition: 0.2s;
+}
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #ffffff !important;
+}
+
 /* ===== grid view 2x5 ===== */
 #gridView{position:fixed;inset:0;z-index:20000;background:#0b0f1a;display:none;flex-direction:column}
 #gridView.show{display:flex}
@@ -318,7 +373,7 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 <script>
 /* ================================================================
-   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (UI/UX อัปเกรด)
+   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (UI/UX + Dark Tooltip)
    ================================================================ */
 'use strict';
 
@@ -700,10 +755,10 @@ async function toggleRainStations() {
         
         marker.bindTooltip(stn.name, { direction: 'top', offset: [0, -30] });
         marker.bindPopup(
-          `<b>${stn.name}</b><br>` +
+          `<b>${stn.name}</b>` +
           `หน่วยงาน: ${stn.agency}<br>` +
-          `ฝน 24 ชม: <b>${stn.rain24h} มม.</b><br>` +
-          `<small>${stn.location}</small>`
+          `ฝน 24 ชม: <b style="color:#34d399">${stn.rain24h} มม.</b><br>` +
+          `<small style="color:#94a3b8">${stn.location}</small>`
         );
         rainMarkers.push(marker);
       }
@@ -967,7 +1022,7 @@ async function init(){
   
   initRainSidebar(); 
 
-  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + Sidebar 2 หมวด');
+  console.log('✅ พร้อมใช้: แผนที่ + กล้อง + น้ำ + ฝน + Sidebar 2 หมวด (Dark UI)');
 }
 updateThaiTime();
 setInterval(updateThaiTime, 1000);
