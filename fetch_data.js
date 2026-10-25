@@ -34,7 +34,7 @@ async function fetchAllData() {
     const now = new Date();
     const thaiTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
     
-    // ปัดนาทีลงให้เป็นรอบ 15 นาที
+    // ปัดนาทีลงให้เป็นรอบ 15 นาที (00, 15, 30, 45)
     const roundedMinutes = Math.floor(thaiTime.getMinutes() / 15) * 15;
     thaiTime.setMinutes(roundedMinutes, 0, 0); 
     
@@ -43,6 +43,7 @@ async function fetchAllData() {
     
     const originalUrl = `https://clpp-radar.onwr.go.th/api/rain_stations?radar_date=${dateStr}&radar_time=${encodeURIComponent(timeStr)}`;
     
+    // 👇 ใส่ URL Cloudflare Worker ของคุณตรงนี้ 👇
     const myWorkerUrl = 'https://ddpm-proxy.2ramrome.workers.dev'; 
     
     const proxyUrl = `${myWorkerUrl}/?url=${encodeURIComponent(originalUrl)}`;
@@ -54,33 +55,39 @@ async function fetchAllData() {
       const textData = await res.text();
       let rawData = JSON.parse(textData);
       
-      // ตรวจสอบว่า API ส่งมาเป็น Array หรือไม่
+      // 🌟 แก้ไขจุดนี้: ข้อมูล Array จะซ่อนอยู่ใน Property ชื่อ 'stations'
       let stationsArray = null;
       if (Array.isArray(rawData)) {
-        stationsArray = rawData;
+        stationsArray = rawData; // เผื่อกรณี API เปลี่ยนกลับมาเป็น Array ตรงๆ
+      } else if (rawData && Array.isArray(rawData.stations)) {
+        stationsArray = rawData.stations; // กรณีปกติที่ API ส่ง Object มา
       } else if (rawData && Array.isArray(rawData.data)) {
-        // บาง API อาจจะครอบข้อมูลมาอีกชั้น
-        stationsArray = rawData.data;
+        stationsArray = rawData.data; // เผื่อไว้เป็น fallback
       }
 
       if (stationsArray) {
         kraburiStations = stationsArray
           .filter(stn => {
+            // stn[5] คือ index ของข้อมูลที่อยู่ เช่น "ต.น้ำจืด · อ.กระบุรี · ระนอง"
             for(let i=0; i<stn.length; i++) {
                 if (typeof stn[i] === 'string' && stn[i].includes('กระบุรี')) return true;
             }
             return false;
           })
           .map(stn => ({
-            id: stn[0], lat: stn[1], lon: stn[2], name: stn[3],
-            agency: stn[4], location: stn[5], rain1h: stn[6], rain24h: stn[10]
+            id: stn[0], 
+            lat: stn[1], 
+            lon: stn[2], 
+            name: stn[3],
+            agency: stn[4], 
+            location: stn[5], 
+            rain1h: stn[6], 
+            rain24h: stn[10]
           }));
           
         console.log(`✅ พบสถานีวัดฝน อ.กระบุรี: ${kraburiStations.length} สถานี`);
       } else {
-        // ถ้าไม่ใช่ Array ให้โชว์ข้อมูลที่ได้มา เพื่อดูว่า API ตอบอะไรกลับมา
-        console.log('⚠️ รูปแบบข้อมูลไม่ใช่ Array (อาจจะยังไม่มีข้อมูลในรอบนี้):');
-        console.log(JSON.stringify(rawData).substring(0, 300)); 
+        console.log('⚠️ รูปแบบข้อมูลไม่ถูกต้อง:', JSON.stringify(rawData).substring(0, 200));
       }
     } else {
       console.log('❌ Rain API ตอบกลับด้วย Status:', res.status);
