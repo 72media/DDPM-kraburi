@@ -1,0 +1,29 @@
+name: Update All Data
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # รันอัตโนมัติทุก 15 นาที
+  workflow_dispatch:      # อนุญาตให้กดรันด้วยตัวเองได้
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write     # สำคัญมาก: ให้สิทธิ์ในการ Commit ไฟล์ JSON กลับเข้า Repo
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch data
+        run: node fetch_data.js
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-update water and rain data"
+          file_pattern: '*.json' # Commit เฉพาะไฟล์ที่ลงท้ายด้วย .json
