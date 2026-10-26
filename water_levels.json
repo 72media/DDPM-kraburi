@@ -4,7 +4,7 @@
     "bank": 4.83
   },
   "RNG02": {
-    "level": 1.08,
+    "level": 0.69,
     "bank": 2.016
   },
   "RNG03": {
@@ -12,7 +12,7 @@
     "bank": 4.157
   },
   "RNG04": {
-    "level": 1.02,
+    "level": null,
     "bank": 4.5
   },
   "RNG05": {
