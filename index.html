@@ -82,24 +82,26 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
 /* ===== Map Tools inside Sidebar ===== */
-.tool-card { background: rgba(20, 30, 38, 0.8); margin: 6px 8px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; }
-.tool-header { padding: 12px 14px; font-weight: 700; color: #bde9ff; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
-.tool-header:hover { background: rgba(255,255,255,0.05); }
-.tool-header .arrow { font-size: 0.8rem; transition: transform 0.3s; }
-.tool-header.open .arrow { transform: rotate(180deg); }
-.tool-body { padding: 0 14px 14px; display: none; border-top: 1px solid rgba(255,255,255,0.05); }
-.tool-body.open { display: block; }
 .tool-btn { width: 100%; padding: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-family: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .tool-btn:hover { background: rgba(0, 200, 180, 0.3); border-color: #2ee6ff; }
 .tool-btn.on { background: rgba(0, 190, 170, 0.4); border-color: #2ee6ff; color: #c8ffff; }
 
-.radar-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; margin-bottom: 10px; }
-.radar-row input[type=range] { flex: 1; accent-color: #4fc3ff; }
-#radarStatus { font-size: 0.75rem; color: #9fd8ff; margin-bottom: 10px; }
-.rl-title { font-size: 0.75rem; color: #9fd8ff; margin-bottom: 6px; font-weight: 700; }
-.rl-bar { height: 10px; border-radius: 5px; background: linear-gradient(90deg,#c6f28a 0%,#c6f28a 20%,#52d64f 20%,#52d64f 40%,#ffe94a 40%,#ffe94a 60%,#ff9f1c 60%,#ff9f1c 80%,#ff2e2e 80%,#ff2e2e 100%); margin-bottom: 4px; }
-.rl-labels { display: flex; font-size: 0.6rem; color: #bfe6ff; font-family: monospace; }
-.rl-labels span { flex: 1; text-align: center; }
+/* Radar bar (Compact & Floating) */
+.radar-bar{position:fixed;bottom:16px;left:16px;z-index:9000;background:rgba(8,14,22,.95);backdrop-filter:blur(12px);border:1px solid rgba(100,190,255,.4);border-radius:16px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none;flex-direction:column;gap:6px;font-size:.75rem;width:240px;color:#e6f4ff}
+.radar-bar.show{display:flex}
+.radar-head{display:flex;align-items:center;justify-content:space-between;font-weight:800;color:#bde9ff;font-size:0.85rem;margin-bottom:2px}
+.radar-row{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.radar-row input[type=range]{flex:1;accent-color:#4fc3ff;height:4px}
+.rb-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:0.8rem;line-height:1;display:flex;align-items:center;justify-content:center;transition:0.2s}
+.rb-close:hover{background:rgba(255,0,0,.5)}
+#radarStatus{font-size:.65rem;color:#9fd8ff;margin-top:2px;margin-bottom:4px;min-height:1em}
+.radar-legend{border-top:1px solid rgba(100,190,255,.2);padding-top:6px;margin-top:2px}
+.radar-legend summary{font-size:.7rem;color:#9fd8ff;cursor:pointer;outline:none;user-select:none;font-weight:700}
+.radar-legend summary:hover{color:#fff}
+.rl-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,#c6f28a 0%,#c6f28a 20%,#52d64f 20%,#52d64f 40%,#ffe94a 40%,#ffe94a 60%,#ff9f1c 60%,#ff9f1c 80%,#ff2e2e 80%,#ff2e2e 100%);margin-top:6px;margin-bottom:2px}
+.rl-labels{display:flex;font-size:.55rem;color:#bfe6ff;font-family:monospace;margin-bottom:2px}
+.rl-labels span{flex:1;text-align:center}
+.rl-note{font-size:.6rem;opacity:.7;margin-top:2px;line-height:1.4}
 
 /* ===== chips ===== */
 .side-chip{font-size:.7rem;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap}
@@ -203,6 +205,8 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
   .cctv-sidebar{width:280px;top:10px;left:10px;max-height:calc(100dvh - 20px)}
   .grid-cols{grid-template-columns:repeat(2,minmax(220px,1fr));min-width:0}
   #weatherPanel{top:50px;width:95vw}
+  /* ปรับ Radar Bar สำหรับมือถือให้เล็กลงและชิดมุม */
+  .radar-bar{width:220px;bottom:10px;left:10px;padding:8px 10px;}
 }
 </style>
 </head>
@@ -219,7 +223,7 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
       <!-- ปุ่มยุบ Sidebar -->
       <button id="sbCollapseBtn" style="flex:0 0 auto;background:rgba(255,255,255,.13);border:none;width:32px;height:32px;border-radius:50%;color:#c0ffec;font-size:1rem;line-height:1;cursor:pointer;transition:.2s" title="ยุบแถบ — เห็นแผนที่เต็มจอ">◀</button>
     </div>
-    <!-- วันเวลา ย้ายมาอยู่ด้านบน Sidebar -->
+    <!-- วันเวลา -->
     <div id="thaiTime" class="time-card"></div>
   </div>
   
@@ -232,36 +236,12 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
     <!-- ★ โซนเครื่องมือแผนที่ -->
     <div class="sidebar-sub-header">🛠️ เครื่องมือแผนที่</div>
     
-    <!-- ปุ่มดูรวม และ คลองน้ำจืด -->
-    <div style="padding: 0 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+    <!-- ปุ่มเครื่องมือทั้งหมด -->
+    <div style="padding: 0 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; margin-bottom: 10px;">
       <button id="gridBtn" class="tool-btn">🖥️ ดูรวม (2×5)</button>
       <button id="gpxBtn" class="tool-btn">🌊 คลองน้ำจืด</button>
+      <button id="radarToggleBtn" class="tool-btn" style="border-color: #4fc3ff; color: #bde9ff;">🌧️ เรดาร์ฝน (ระนอง)</button>
       <button id="weatherToggleBtn" class="tool-btn" style="border-color: #ffe6b3;">🌦️ พยากรณ์ 48 ชม.</button>
-    </div>
-
-    <!-- เรดาร์ฝน (แบบ Accordion ใน Sidebar) -->
-    <div class="tool-card" style="margin-top: 12px; margin-bottom: 10px;">
-      <div class="tool-header" id="radarToggleHeader">
-        <span>🌧️ เรดาร์ฝน (ระนอง)</span>
-        <span class="arrow">▼</span>
-      </div>
-      <div class="tool-body" id="radarBody">
-        <label class="radar-row" style="margin-top:10px;">
-          <input type="checkbox" id="radarCheck"> แสดงเลเยอร์บนแผนที่
-        </label>
-        <div class="radar-row">
-          <span>โปร่งใส</span>
-          <input type="range" id="radarOpacity" min="0" max="1" step="0.05" value="0.6">
-          <span id="radarOpacityVal">60%</span>
-        </div>
-        <div id="radarStatus">เรดาร์ปิดอยู่</div>
-        <div class="radar-legend">
-          <div class="rl-title">ความแรงฝน (mm/hr)</div>
-          <div class="rl-bar"></div>
-          <div class="rl-labels"><span>0.1–1</span><span>1–5</span><span>5–20</span><span>20–85</span><span>&gt;85</span></div>
-          <div class="rl-note" style="font-size:0.65rem; color:#9fd8ff; margin-top:6px; opacity:0.8;">สีแดง=หนักมาก เสี่ยงน้ำท่วมฉับพลัน</div>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -271,6 +251,23 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 <button id="sbExpandBtn" style="position:absolute;top:14px;left:16px;z-index:5001;width:56px;height:56px;border-radius:50%;background:rgba(8,14,22,.96);border:2px solid #2acfba;color:#8effe0;font-size:24px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.55);transition:.2s" title="แสดงแถบรายชื่อ">🎥</button>
 
 <div id="map"></div>
+
+<!-- Radar Floating Panel (Compact) -->
+<div id="radarBar" class="radar-bar">
+  <div class="radar-head"><span>🌧️ เรดาร์ระนอง</span><button class="rb-close" id="radarBarClose" title="ซ่อน">✕</button></div>
+  <label class="radar-row"><input type="checkbox" id="radarCheck"> แสดงเลเยอร์</label>
+  <div class="radar-row"><span>โปร่งใส</span><input type="range" id="radarOpacity" min="0" max="1" step="0.05" value="0.6"><span id="radarOpacityVal">60%</span></div>
+  <div id="radarStatus">ปิดอยู่</div>
+  
+  <div class="radar-legend">
+    <details>
+      <summary>ℹ️ ดูสเกลสีความแรงฝน</summary>
+      <div class="rl-bar"></div>
+      <div class="rl-labels"><span>0.1–1</span><span>1–5</span><span>5–20</span><span>20–85</span><span>&gt;85</span></div>
+      <div class="rl-note">เขียว=เล็กน้อย, เหลือง=ปานกลาง, <span style="color:#ff6b6b">แดง=หนักมาก</span></div>
+    </details>
+  </div>
+</div>
 
 <!-- Weather 48h Floating Panel -->
 <div id="weatherPanel">
@@ -322,7 +319,7 @@ body{font-family:'Prompt','Noto Sans Thai',system-ui,sans-serif;background:#0b0f
 
 <script>
 /* ================================================================
-   CCTV Map Pro กระบุรี — เวอร์ชัน UX/UI (Full Screen Map + Sidebar Tools)
+   CCTV Map Pro กระบุรี — เวอร์ชันสมบูรณ์ (Compact Radar UI)
    ================================================================ */
 'use strict';
 
@@ -335,9 +332,12 @@ const CAMERAS = [
 ];
 const POLL_MS     = 3000;                 
 const WARN_RATIO  = 0.80;                 
+
+// ★ ตัวแปรเรดาร์ตามที่คุณกำหนด
 const RADAR_URL   = 'https://semet.uk/loop/RNGLoop.gif';
 const RADAR_BOUNDS= [[8.988744,97.423977],[11.240715,99.618184]];
 const RADAR_REFRESH_MS = 5*60*1000;       
+
 const GPX_URL     = 'https://raw.githubusercontent.com/72media/my-file/refs/heads/main/khongnamjud.gpx';
 
 const camSrc = (code, idx) => 'https://cctv.disaster.go.th/api/webrtc/public-frame.jpeg?src=' + code + '-0' + (idx + 1);
@@ -364,7 +364,7 @@ let map = null;
 let levelData = {};      
 let markers = {};        
 let gpxLayer = null, gpxOn = false;
-let radarLayer = null, radarOn = false, radarTimer = null;
+let radarLayer = null, radarOn = false, radarBarOn = false, radarTimer = null;
 let modalOpen = false, modalCode = null, modalCam = 0, modalTimer = null;
 let gridOpen = false, gridTimers = {};
 const weatherCache = {};
@@ -418,7 +418,6 @@ async function refreshLevels(){
     jsonData = await r.json();
   } catch(e) {
     console.warn("⚠️ ไม่สามารถโหลด water_levels.json ได้ (อาจเพราะรันแบบ file://) ใช้ข้อมูลจำลองแทน");
-    // Mock Data Fallback
     jsonData = {
       'RNG01': { level: 3.66, bank: 5.0 },
       'RNG02': { level: 1.32, bank: 4.5 },
@@ -569,8 +568,7 @@ async function initRainSidebar() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     stations = await res.json();
   } catch (e) {
-    console.warn("⚠️ ไม่สามารถโหลด rain_stations.json ได้ (อาจเพราะรันแบบ file://) ใช้ข้อมูลจำลองแทน");
-    // Mock Data Fallback
+    console.warn("⚠️ ไม่สามารถโหลด rain_stations.json ได้ ใช้ข้อมูลจำลองแทน");
     stations = [
       { name: 'สถานีบ้านปากจั่น', agency: 'ThaiWater', rain24h: 5.2, lat: 10.533170, lon: 98.823570, location: 'ต.ปากจั่น' },
       { name: 'สถานีบ้านลำเลียง', agency: 'TMD', rain24h: 12.5, lat: 10.306850, lon: 98.854310, location: 'ต.ลำเลียง' },
@@ -878,15 +876,20 @@ function setRadarVisible(on){
     radarTimer = setInterval(() => {
       if (!document.hidden && !gridOpen && !modalOpen && radarOn){
         radarLayer.setUrl(RADAR_URL + '?_t=' + Date.now());
-        $('radarStatus').textContent = 'โหลดเรดาร์ล่าสุด ' + fmtTime(new Date());
+        $('radarStatus').textContent = 'โหลดล่าสุด ' + fmtTime(new Date());
       }
     }, RADAR_REFRESH_MS);
-    $('radarStatus').textContent = 'โหลดเรดาร์ล่าสุด ' + fmtTime(new Date());
+    $('radarStatus').textContent = 'โหลดล่าสุด ' + fmtTime(new Date());
   } else {
     if (radarLayer && map.hasLayer(radarLayer)) map.removeLayer(radarLayer);
     clearInterval(radarTimer);
-    $('radarStatus').textContent = 'เรดาร์ปิดอยู่';
+    $('radarStatus').textContent = 'ปิดอยู่';
   }
+}
+function toggleRadarBar(){
+  radarBarOn = !radarBarOn;
+  $('radarBar').classList.toggle('show', radarBarOn);
+  if (radarBarOn && !radarOn) setRadarVisible(true);
 }
 
 /* ---------- Sidebar Collapse Logic ---------- */
@@ -918,6 +921,19 @@ function setupUI(){
   // Sidebar Tools - GPX
   $('gpxBtn').addEventListener('click', toggleGPX);
 
+  // Sidebar Tools - Radar
+  $('radarToggleBtn').addEventListener('click', toggleRadarBar);
+  $('radarBarClose').addEventListener('click', () => {
+    radarBarOn = false;
+    $('radarBar').classList.remove('show');
+  });
+  $('radarCheck').addEventListener('change', e => setRadarVisible(e.target.checked));
+  $('radarOpacity').addEventListener('input', e => {
+    const v = parseFloat(e.target.value);
+    $('radarOpacityVal').textContent = Math.round(v*100) + '%';
+    if (radarLayer) radarLayer.setOpacity(v);
+  });
+
   // Sidebar Tools - Weather (Floating Panel)
   $('weatherToggleBtn').addEventListener('click', () => {
     const p = $('weatherPanel');
@@ -927,26 +943,6 @@ function setupUI(){
     }
   });
   $('closeWeather').addEventListener('click', () => $('weatherPanel').classList.remove('show'));
-
-  // Sidebar Tools - Radar Accordion & Controls
-  const rHeader = $('radarToggleHeader');
-  const rBody = $('radarBody');
-  rHeader.addEventListener('click', () => {
-    const isOpen = rBody.classList.contains('open');
-    rBody.classList.toggle('open', !isOpen);
-    rHeader.classList.toggle('open', !isOpen);
-    if (!isOpen && !radarOn) {
-      $('radarCheck').checked = true;
-      setRadarVisible(true);
-    }
-  });
-  
-  $('radarCheck').addEventListener('change', e => setRadarVisible(e.target.checked));
-  $('radarOpacity').addEventListener('input', e => {
-    const v = parseFloat(e.target.value);
-    $('radarOpacityVal').textContent = Math.round(v*100) + '%';
-    if (radarLayer) radarLayer.setOpacity(v);
-  });
 
   // Grid controls
   $('gridBackBtn').addEventListener('click', closeGrid);
@@ -987,7 +983,7 @@ async function init(){
   
   initRainSidebar(); 
 
-  console.log('✅ พร้อมใช้: แผนที่เต็มจอ + Sidebar รวมทุกเมนู (มีระบบ Mock Data สำรอง)');
+  console.log('✅ พร้อมใช้: แผนที่เต็มจอ + Sidebar + Compact Radar UI');
 }
 updateThaiTime();
 setInterval(updateThaiTime, 1000);
