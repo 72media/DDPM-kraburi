@@ -1,10 +1,10 @@
 {
   "RNG01": {
-    "level": null,
+    "level": 3.49,
     "bank": 4.83
   },
   "RNG02": {
-    "level": 1.05,
+    "level": 0.97,
     "bank": 2.016
   },
   "RNG03": {
