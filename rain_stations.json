@@ -87,7 +87,7 @@
     "agency": "HII",
     "location": "ต.บางใหญ่ · อ.กระบุรี · ระนอง",
     "rain1h": 0,
-    "rain24h": 0
+    "rain24h": null
   },
   {
     "id": 1459143,
@@ -137,7 +137,7 @@
     "agency": "HII",
     "location": "ต.น้ำจืด · อ.กระบุรี · ระนอง",
     "rain1h": 0,
-    "rain24h": 0
+    "rain24h": null
   },
   {
     "id": 6855910,
